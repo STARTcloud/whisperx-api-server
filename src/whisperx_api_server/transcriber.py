@@ -4,7 +4,7 @@ from whisperx import transcribe as whisperx_transcribe
 from whisperx import audio as whisperx_audio
 from whisperx import alignment as whisperx_alignment
 from whisperx import diarize as whisperx_diarize
-from whisperx import types as whisperx_types
+from whisperx import schema as whisperx_types
 from fastapi import UploadFile
 import logging
 import time
@@ -131,7 +131,7 @@ async def _diarize_audio(result, audio, request_id):
     try:
         diarization_model_start = time.time()
         logger.info(f"Request ID: {request_id} - Loading diarization model")
-        diarize_model = await load_diarize_model_cached(model_name="tensorlake/speaker-diarization-3.1")
+        diarize_model = await load_diarize_model_cached(model_name=config.diarization.model)
         logger.info(f"Request ID: {request_id} - Diarization model loaded. Loading took {time.time() - diarization_model_start:.2f} seconds. Starting diarization")
 
         def _run_diarization():

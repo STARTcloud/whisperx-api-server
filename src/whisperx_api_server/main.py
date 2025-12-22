@@ -32,6 +32,10 @@ from whisperx_api_server.routers.transcriptions import (
     router as transcribe_router,
 )
 
+from whisperx_api_server.routers.transcription_jobs import (
+    router as transcription_jobs_router,
+)
+
 class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
@@ -44,6 +48,16 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 async def lifespan(app: FastAPI):
     config = get_config()
     logger = logging.getLogger(__name__)
+
+    # Initialize database for job queue
+    from whisperx_api_server.database import init_db
+    init_db()
+    logger.info("Database initialized for job queue")
+
+    # Start background worker for job queue
+    from whisperx_api_server.services.worker import worker
+    worker.start()
+    logger.info("Background job worker started")
 
     if config.whisper.preload_model is not None:
         logger.info(f"Loading model {config.whisper.preload_model}")
@@ -76,6 +90,11 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    # Shutdown
+    logger.info("Shutting down...")
+    worker.stop()
+    logger.info("Background job worker stopped")
+
 def create_app() -> FastAPI:
     config = get_config()
     setup_logger(config.log_level)
@@ -94,6 +113,7 @@ def create_app() -> FastAPI:
     
     app.include_router(models_router, dependencies=dependencies)
     app.include_router(transcribe_router, dependencies=dependencies)
+    app.include_router(transcription_jobs_router, dependencies=dependencies)
 
     if config.allow_origins is not None:
         app.add_middleware(

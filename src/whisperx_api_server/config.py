@@ -175,6 +175,7 @@ class AlignConfig(BaseModel):
 class DiarizeConfig(BaseModel):
     cache: bool = Field(default=True)
     preload_model: str = Field(default=None)
+    model: str = Field(default="pyannote/speaker-diarization-community-1")
 
 class Config(BaseSettings):
     """

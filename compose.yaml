@@ -10,8 +10,26 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - hugging_face_cache:/root/.cache/huggingface
-      - torch_cache:/root/.cache/torch
+      # Persist job queue database and uploads
+      - /data/whisperx-api/data:/workspace/data
+      # Persist downloaded models (HuggingFace and PyTorch)
+      - /data/whisperx-api/models:/root/.cache/huggingface
+      - /data/whisperx-api/models:/root/.cache/torch
+    environment:
+      # Database and uploads path
+      - DATABASE_PATH=/workspace/data/whisperx.db
+      - UPLOAD_DIR=/workspace/data/uploads
+      # Optional: Set HuggingFace token for diarization
+      - HF_TOKEN=${HF_TOKEN:-}
+      # Default model for transcriptions (use double underscore for nested config)
+      - WHISPER__MODEL=${WHISPERX_MODEL:-large-v2}
+      # Compute type for GPU
+      - WHISPER__COMPUTE_TYPE=${WHISPERX_COMPUTE_TYPE:-float16}
+      - WHISPER__INFERENCE_DEVICE=${WHISPERX_DEVICE:-cuda}
+      # Use Silero VAD (compatible with cuDNN 9)
+      - WHISPER__VAD_METHOD=silero
+      # Diarization model (use 3.1 with pyannote 3.x)
+      - DIARIZATION__MODEL=pyannote/speaker-diarization-3.1
     deploy:
       resources:
         reservations:
@@ -19,6 +37,8 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+
   whisperx-api-server-cpu:
     image: whisperx-api-server-cpu
     build:
@@ -30,8 +50,12 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - hugging_face_cache:/root/.cache/huggingface
-      - torch_cache:/root/.cache/torch
-volumes:
-  hugging_face_cache:
-  torch_cache:
+      # Persist job queue database and uploads
+      - /data/whisperx-api/data:/workspace/data
+      # Persist downloaded models (HuggingFace and PyTorch)
+      - /data/whisperx-api/models:/root/.cache/huggingface
+      - /data/whisperx-api/models:/root/.cache/torch
+    environment:
+      # Database and uploads path
+      - DATABASE_PATH=/workspace/data/whisperx.db
+      - UPLOAD_DIR=/workspace/data/uploads
