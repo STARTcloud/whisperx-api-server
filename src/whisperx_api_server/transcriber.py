@@ -150,6 +150,7 @@ def _finalize_text(result, align_or_diarize: bool):
     segments = result.get("segments", [])
     if align_or_diarize and isinstance(segments, dict):
         segments = segments.get("segments", [])
+        result["segments"] = segments  # Fix double-nested segments for OpenAI compatibility
 
     result["text"] = '\n'.join([s.get("text", "").strip() for s in segments if s.get("text")])
     return result

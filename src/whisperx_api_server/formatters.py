@@ -40,9 +40,21 @@ def handle_whisperx_format(transcript, writer_class, options):
     writer = writer_class(output_dir=None)
     output = ListWriter()
 
-    transcript["segments"]["language"] = transcript["language"]
+    # WhisperX writers expect a dict with "segments" array and "language" metadata
+    # Build this structure whether segments is already a dict or a flat array
+    segments = transcript.get("segments", [])
+    if isinstance(segments, dict):
+        # Already in the expected dict format
+        segments["language"] = transcript["language"]
+        writer_input = segments
+    else:
+        # Segments is a flat array (OpenAI format), wrap it for whisperx writers
+        writer_input = {
+            "segments": segments,
+            "language": transcript.get("language", "")
+        }
     
-    writer.write_result(transcript["segments"], output, options)
+    writer.write_result(writer_input, output, options)
 
     return output.get_output()
 
