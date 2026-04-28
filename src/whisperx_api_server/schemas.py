@@ -47,6 +47,8 @@ class TranscriptionJobResponse(BaseModel):
     min_speakers: Optional[int] = Field(default=None, description="Minimum speakers")
     max_speakers: Optional[int] = Field(default=None, description="Maximum speakers")
     chunk_size: int = Field(description="Chunk size in seconds")
+    initial_prompt: Optional[str] = Field(default=None, description="Initial prompt used to bias decoding")
+    hotwords: Optional[str] = Field(default=None, description="Hotwords used to boost decoding")
 
     # Results (only present when completed)
     text: Optional[str] = Field(default=None, description="Full transcript text")

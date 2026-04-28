@@ -61,6 +61,8 @@ def _job_to_response(job: TranscriptionJob) -> TranscriptionJobResponse:
         min_speakers=job.min_speakers,
         max_speakers=job.max_speakers,
         chunk_size=job.chunk_size,
+        initial_prompt=job.initial_prompt,
+        hotwords=job.hotwords,
         text=text,
         segments=segments,
         detected_language=detected_language,
@@ -90,6 +92,8 @@ async def create_job(
     chunk_size: int = Form(default=15, description="Chunk size in seconds"),
     vad_onset: float = Form(default=0.5, description="VAD onset threshold"),
     vad_offset: float = Form(default=0.363, description="VAD offset threshold"),
+    prompt: Optional[str] = Form(default=None, description="Text used as preceding context (initial_prompt) to bias decoding toward domain vocabulary"),
+    hotwords: Optional[str] = Form(default=None, description="Space-separated terms to boost during decoding"),
     db: Session = Depends(get_db),
 ):
     """Create a new transcription job."""
@@ -129,6 +133,8 @@ async def create_job(
         chunk_size=chunk_size,
         vad_onset=vad_onset,
         vad_offset=vad_offset,
+        initial_prompt=prompt,
+        hotwords=hotwords,
     )
 
     db.add(job)

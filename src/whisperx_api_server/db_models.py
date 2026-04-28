@@ -43,6 +43,10 @@ class TranscriptionJob(Base):
     vad_onset = Column(Float, nullable=False, default=0.5)
     vad_offset = Column(Float, nullable=False, default=0.363)
 
+    # Vocabulary biasing options (forwarded to Whisper as asr_options)
+    initial_prompt = Column(Text, nullable=True)
+    hotwords = Column(Text, nullable=True)
+
     # Metadata
     duration = Column(Float, nullable=True)  # Audio duration in seconds
     processing_time = Column(Float, nullable=True)  # Processing time in seconds

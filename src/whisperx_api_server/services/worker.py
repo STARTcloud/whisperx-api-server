@@ -146,12 +146,20 @@ class TranscriptionWorker:
             # Load model instance
             model_instance = loop.run_until_complete(load_model_instance(job.model))
             
+            # Build asr_options, only including biasing fields when set so that
+            # default Whisper behavior is preserved when neither is provided.
+            asr_options = {}
+            if job.initial_prompt:
+                asr_options["initial_prompt"] = job.initial_prompt
+            if job.hotwords:
+                asr_options["hotwords"] = job.hotwords
+
             # Run transcription
             result = loop.run_until_complete(transcriber.transcribe(
                 audio_file=fake_file,
                 batch_size=16,
                 chunk_size=job.chunk_size,
-                asr_options={},
+                asr_options=asr_options,
                 language=job.language,
                 whispermodel=model_instance,
                 align=True,
