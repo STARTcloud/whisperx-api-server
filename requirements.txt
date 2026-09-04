@@ -2,6 +2,10 @@ fastapi>=0.120.4
 uvicorn>=0.38.0
 pydantic>=2.12.3
 pydantic-settings>=2.11.0
-whisperx @ git+https://github.com/m-bain/whisperX.git
+# Pinned: an unpinned git URL means every image build takes whatever upstream main is that
+# day, so two builds of the same commit can behave differently. This SHA is what main
+# resolved to when the pin was added, so it does not change what the next build produces --
+# it only makes it repeatable. Move it deliberately.
+whisperx @ git+https://github.com/m-bain/whisperX.git@2cfd7b7c5c7bba144954364db747319b50e8232b
 python-multipart>=0.0.20
 sqlalchemy>=2.0.0
