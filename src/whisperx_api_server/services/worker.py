@@ -178,6 +178,10 @@ class TranscriptionWorker:
                 "text": result.get("text", ""),
                 "segments": segments,
                 "language": result.get("language", ""),
+                # Per-speaker voice vectors, when diarization produced them. A caller
+                # transcribing a long recording in parts matches these across parts so one
+                # person keeps one label; absent, it can only fall back to per-part labels.
+                "speaker_embeddings": result.get("speaker_embeddings") or {},
             })
             job.duration = result.get("duration")
             job.processing_time = processing_time

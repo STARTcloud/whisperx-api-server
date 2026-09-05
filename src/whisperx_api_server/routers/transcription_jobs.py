@@ -32,12 +32,14 @@ def _job_to_response(job: TranscriptionJob) -> TranscriptionJobResponse:
     text = None
     segments = None
     detected_language = None
+    speaker_embeddings = None
 
     if job.transcript:
         try:
             transcript_data = json.loads(job.transcript)
             text = transcript_data.get("text")
             detected_language = transcript_data.get("language")
+            speaker_embeddings = transcript_data.get("speaker_embeddings") or None
             raw_segments = transcript_data.get("segments", [])
             segments = [
                 TranscriptSegment(
@@ -64,6 +66,7 @@ def _job_to_response(job: TranscriptionJob) -> TranscriptionJobResponse:
         text=text,
         segments=segments,
         detected_language=detected_language,
+        speaker_embeddings=speaker_embeddings,
         duration=job.duration,
         processing_time=job.processing_time,
         error_message=job.error_message,

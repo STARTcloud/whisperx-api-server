@@ -41,6 +41,18 @@ https://platform.openai.com/docs/api-reference/audio/createTranslation
 
 **Returns**: Translation results in the specified format.
 
+### `POST /v1/audio/transcriptions/jobs`
+Queues an asynchronous transcription job, processed one at a time by a background worker. Poll `GET /v1/audio/transcriptions/jobs/{id}` until `status` is `completed` or `failed`; `GET /v1/audio/transcriptions/jobs` lists jobs and `DELETE /v1/audio/transcriptions/jobs/{id}` removes one and its audio.
+
+**Parameters**: `file`, `model`, `language`, `diarize`, `min_speakers`, `max_speakers`, `chunk_size`, `vad_onset`, `vad_offset`.
+
+A diarized job also returns **`speaker_embeddings`**: a voice vector per speaker label. Diarization labels restart from scratch in every request, so a caller transcribing a long recording in parts cannot otherwise tell that part 2's first voice is part 1's second. Comparing these vectors across parts identifies the same person. The field is absent when the installed whisperx does not produce embeddings, which is distinguishable from a job that simply had no speakers.
+
+```bash
+curl -X POST http://localhost:8000/v1/audio/transcriptions/jobs \
+  -F "file=@meeting.wav" -F "diarize=true" -F "model=large-v2"
+```
+
 ### `GET /healthcheck`
 Returns the current health status of the API server.
 

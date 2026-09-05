@@ -3,7 +3,7 @@ Pydantic schemas for API request/response validation.
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Dict, Optional, List
 from pydantic import BaseModel, Field
 
 
@@ -52,6 +52,11 @@ class TranscriptionJobResponse(BaseModel):
     text: Optional[str] = Field(default=None, description="Full transcript text")
     segments: Optional[List[TranscriptSegment]] = Field(default=None, description="Transcript segments")
     detected_language: Optional[str] = Field(default=None, description="Detected language")
+    speaker_embeddings: Optional[Dict[str, List[float]]] = Field(
+        default=None,
+        description="Voice vector per speaker label, when diarization produced them. Lets a caller "
+                    "transcribing in parts recognise the same speaker across parts, whose labels "
+                    "otherwise restart from scratch in each part.")
 
     # Metadata
     duration: Optional[float] = Field(default=None, description="Audio duration in seconds")
