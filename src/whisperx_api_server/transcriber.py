@@ -126,6 +126,24 @@ async def _align_audio(result, audio, whispermodel, request_id):
         raise
 
 
+def _speaker_embeddings(embeddings) -> dict:
+    """
+    Normalise whisperx's speaker embeddings to {speaker: [float, ...]}.
+
+    It hands back a dict of speaker to vector, where the vector may be a numpy array; JSON needs
+    plain lists. Returns {} when the installed whisperx does not produce them, so a caller can
+    tell "this build cannot do it" from "there were no speakers".
+    """
+    if not embeddings:
+        return {}
+    out = {}
+    for speaker, vector in dict(embeddings).items():
+        if vector is None:
+            continue
+        out[str(speaker)] = [float(v) for v in (vector.tolist() if hasattr(vector, "tolist") else vector)]
+    return out
+
+
 async def _diarize_audio(result, audio, request_id):
     loop = asyncio.get_running_loop()
     try:
@@ -136,11 +154,18 @@ async def _diarize_audio(result, audio, request_id):
 
         def _run_diarization():
             with torch.inference_mode():
-                return diarize_model(audio)
+                # Ask for the speaker embeddings too: a caller that transcribes a long recording
+                # in parts has no other way to tell that part 2's first voice is part 1's second,
+                # because each part is diarized on its own and the labels restart. Older whisperx
+                # returns the frame alone, so accept both shapes.
+                return diarize_model(audio, return_embeddings=True)
         diarize_start = time.time()
-        diarize_segments = await loop.run_in_executor(None, _run_diarization)
+        diarized = await loop.run_in_executor(None, _run_diarization)
+        diarize_segments, embeddings = diarized if isinstance(diarized, tuple) else (diarized, None)
         result["segments"] = whisperx_diarize.assign_word_speakers(diarize_segments, result["segments"])
-        logger.info(f"Request ID: {request_id} - Diarization took {time.time() - diarize_start:.2f} seconds")
+        result["speaker_embeddings"] = _speaker_embeddings(embeddings)
+        logger.info(f"Request ID: {request_id} - Diarization took {time.time() - diarize_start:.2f} seconds; "
+                    f"{len(result['speaker_embeddings'])} speaker embedding(s)")
         return result
     except Exception as e:
         logger.error(f"Request ID: {request_id} - Diarization failed: {e}")
