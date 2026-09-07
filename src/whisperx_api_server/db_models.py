@@ -13,6 +13,11 @@ from whisperx_api_server.database import Base
 class TranscriptionJob(Base):
     """
     Represents a transcription job in the database.
+
+    Adding a column here is not enough on its own: init_db() calls create_all(), which creates
+    missing *tables* and never missing *columns*. A database written by an earlier version keeps
+    its old shape, and every query against the new model then fails against the deployed data.
+    A new column needs an explicit ALTER on startup (or a migration tool) alongside it.
     """
 
     __tablename__ = "transcription_jobs"
